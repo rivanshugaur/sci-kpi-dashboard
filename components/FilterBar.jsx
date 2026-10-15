@@ -8,8 +8,7 @@ import {
   PieChart, 
   BarChart3, 
   RotateCcw,
-  Filter,
-  Check
+  Sparkles
 } from 'lucide-react';
 import { MONTHS } from '../lib/dataCleaner';
 
@@ -46,11 +45,27 @@ export default function FilterBar({
     }
   };
 
+  // Quick Preset Handlers
+  const applyPreset = (presetType) => {
+    if (presetType === 'all') {
+      onResetFilters();
+    } else if (presetType === 'tankers') {
+      setFilters(prev => ({ ...prev, sector: 'Crude Tanker' }));
+    } else if (presetType === 'bulk') {
+      setFilters(prev => ({ ...prev, sector: 'Bulk Carrier' }));
+    } else if (presetType === 'offshore') {
+      setFilters(prev => ({ ...prev, sector: 'Offshore Supply' }));
+    } else if (presetType === 'latest') {
+      const latestYr = availableYears[availableYears.length - 1];
+      setFilters(prev => ({ ...prev, fromYear: latestYr, toYear: latestYr }));
+    }
+  };
+
   return (
-    <div className="glass-card rounded-2xl p-5 mb-6 border border-navy-800">
+    <div className="glass-card rounded-2xl p-5 mb-6 border border-navy-800 space-y-4">
       
       {/* Mode Navigation Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-navy-800/80 pb-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-navy-800/80 pb-4">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 max-w-full">
           {ANALYSIS_MODES.map((item) => {
             const Icon = item.icon;
@@ -88,8 +103,46 @@ export default function FilterBar({
         </div>
       </div>
 
+      {/* Quick Filter Presets */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+          <Sparkles className="w-3 h-3 text-sky-400" />
+          Presets:
+        </span>
+        <button
+          onClick={() => applyPreset('all')}
+          className="px-2.5 py-1 rounded-lg bg-navy-900 hover:bg-navy-800 text-slate-300 hover:text-white border border-navy-800 transition-colors"
+        >
+          All Fleet
+        </button>
+        <button
+          onClick={() => applyPreset('tankers')}
+          className="px-2.5 py-1 rounded-lg bg-navy-900 hover:bg-navy-800 text-slate-300 hover:text-white border border-navy-800 transition-colors"
+        >
+          Crude Tankers
+        </button>
+        <button
+          onClick={() => applyPreset('bulk')}
+          className="px-2.5 py-1 rounded-lg bg-navy-900 hover:bg-navy-800 text-slate-300 hover:text-white border border-navy-800 transition-colors"
+        >
+          Bulk Carriers
+        </button>
+        <button
+          onClick={() => applyPreset('offshore')}
+          className="px-2.5 py-1 rounded-lg bg-navy-900 hover:bg-navy-800 text-slate-300 hover:text-white border border-navy-800 transition-colors"
+        >
+          Offshore Fleet
+        </button>
+        <button
+          onClick={() => applyPreset('latest')}
+          className="px-2.5 py-1 rounded-lg bg-navy-900 hover:bg-navy-800 text-slate-300 hover:text-white border border-navy-800 transition-colors"
+        >
+          Latest FY Only
+        </button>
+      </div>
+
       {/* Dynamic Filter Controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3.5 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3.5 items-end pt-2 border-t border-navy-800/60">
         
         {/* From Year */}
         <div>
@@ -133,7 +186,7 @@ export default function FilterBar({
           </select>
         </div>
 
-        {/* Month range (if Monthly or Vessel or Sector view) */}
+        {/* Month range */}
         {mode !== 'quarterly' && mode !== 'yearly' && (
           <>
             <div>

@@ -12,9 +12,12 @@ import VesselView from '../components/VesselView';
 import DataTableView from '../components/DataTableView';
 import UploadModal from '../components/UploadModal';
 import AuthModal from '../components/AuthModal';
+import VesselModal from '../components/VesselModal';
+import ScenarioPlanner from '../components/ScenarioPlanner';
+import Toast from '../components/Toast';
 import { DEFAULT_KPI_DATA } from '../lib/defaultData';
 import { MONTH_ORDER, KPI_KEYS } from '../lib/dataCleaner';
-import { Ship, Anchor, Compass, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Ship, Anchor, Compass, TrendingUp, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export default function DashboardPage() {
   const [data, setData] = useState(DEFAULT_KPI_DATA);
@@ -29,9 +32,21 @@ export default function DashboardPage() {
     role: 'Administrator',
   });
 
-  // Modals
+  // Modals & Drawers
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isScenarioOpen, setIsScenarioOpen] = useState(false);
+  const [selectedVessel, setSelectedVessel] = useState(null);
+
+  // Toast feedback
+  const [toast, setToast] = useState(null);
+
+  const showToast = (title, message = '', type = 'info') => {
+    setToast({ title, message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 4000);
+  };
 
   // Available filter options derived from dataset
   const availableYears = useMemo(() => {
@@ -70,6 +85,7 @@ export default function DashboardPage() {
       sector: 'All',
       vessel: 'All',
     });
+    showToast('Filters Reset', 'Displaying full fleet across all active periods.', 'info');
   };
 
   // Filtered dataset
@@ -122,14 +138,19 @@ export default function DashboardPage() {
   const handleDataUploaded = (newRows, uploadMode) => {
     if (uploadMode === 'replace') {
       setData(newRows);
+      showToast('Dataset Replaced', `Loaded ${newRows.length} voyage records.`, 'success');
     } else {
       setData((prev) => [...prev, ...newRows]);
+      showToast('Data Appended', `Added ${newRows.length} new records to fleet ledger.`, 'success');
     }
   };
 
   // Export current filtered view to CSV
   const handleExportCSV = () => {
-    if (filteredData.length === 0) return;
+    if (filteredData.length === 0) {
+      showToast('Export Warning', 'No records match current filter criteria.', 'error');
+      return;
+    }
 
     const headers = ['Year', 'Month', 'Quarter', 'Sector', 'Vessel', 'Vessel Code', 'Total Income', 'DOE', 'IOE', 'GOP', 'PBT'];
     const rows = filteredData.map((d) => [
@@ -155,6 +176,8 @@ export default function DashboardPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    showToast('Export Successful', `Exported ${filteredData.length} rows to CSV.`, 'success');
   };
 
   return (
@@ -164,12 +187,19 @@ export default function DashboardPage() {
       <Navbar
         auth={auth}
         onOpenLogin={() => setIsLoginOpen(true)}
-        onLogout={() => setAuth({ isAuthenticated: false, username: '', role: '' })}
+        onLogout={() => {
+          setAuth({ isAuthenticated: false, username: '', role: '' });
+          showToast('Signed Out', 'You have been logged out.', 'info');
+        }}
         onOpenUpload={() => setIsUploadOpen(true)}
+        onOpenScenario={() => setIsScenarioOpen(true)}
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         invertSigns={invertSigns}
-        setInvertSigns={setInvertSigns}
+        setInvertSigns={(val) => {
+          setInvertSigns(val);
+          showToast('Accounting Convention Switched', val ? 'Displaying positive financial values' : 'Displaying raw SAP accounting signs', 'info');
+        }}
         onExportCSV={handleExportCSV}
         totalRecords={data.length}
       />
@@ -209,6 +239,10 @@ export default function DashboardPage() {
                 <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
                 Accounting Std: <strong className="text-sky-300">₹ in Lacs (INR)</strong>
               </span>
+              <span className="flex items-center gap-1.5 bg-navy-950/60 px-3 py-1.5 rounded-xl border border-navy-800">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                Vercel Serverless Ready
+              </span>
             </div>
           </div>
         </div>
@@ -224,10 +258,11 @@ export default function DashboardPage() {
             data={filteredData}
             invertSigns={invertSigns}
             onExportCSV={handleExportCSV}
+            onSelectVessel={(v) => setSelectedVessel(v)}
           />
         ) : (
           <>
-            {/* Filter Bar */}
+            {/* Filter Bar with Presets */}
             <FilterBar
               mode={mode}
               setMode={setMode}
@@ -276,7 +311,11 @@ export default function DashboardPage() {
                   <SectorView data={filteredData} invertSigns={invertSigns} />
                 )}
                 {mode === 'vessel' && (
-                  <VesselView data={filteredData} invertSigns={invertSigns} />
+                  <VesselView 
+                    data={filteredData} 
+                    invertSigns={invertSigns} 
+                    onSelectVessel={(v) => setSelectedVessel(v)} 
+                  />
                 )}
               </div>
             )}
@@ -302,8 +341,28 @@ export default function DashboardPage() {
             username: user.username,
             role: user.role,
           });
+          showToast('Authentication Successful', `Welcome aboard, ${user.username}!`, 'success');
         }}
       />
+
+      {/* Vessel Detail Dossier Modal */}
+      <VesselModal
+        vesselName={selectedVessel}
+        allData={data}
+        invertSigns={invertSigns}
+        onClose={() => setSelectedVessel(null)}
+      />
+
+      {/* Commercial Sensitivity Simulator */}
+      <ScenarioPlanner
+        isOpen={isScenarioOpen}
+        onClose={() => setIsScenarioOpen(false)}
+        baseTotals={totals}
+        invertSigns={invertSigns}
+      />
+
+      {/* Feedback Toast */}
+      <Toast toast={toast} onClose={() => setToast(null)} />
 
     </div>
   );

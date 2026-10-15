@@ -9,11 +9,12 @@ import {
   ChevronRight,
   Filter,
   Ship,
-  Calendar
+  Calendar,
+  ExternalLink
 } from 'lucide-react';
 import { KPI_META, KPI_KEYS, formatNumber } from '../lib/dataCleaner';
 
-export default function DataTableView({ data, invertSigns, onExportCSV }) {
+export default function DataTableView({ data, invertSigns, onExportCSV, onSelectVessel }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('year');
   const [sortAsc, setSortAsc] = useState(false);
@@ -80,7 +81,7 @@ export default function DataTableView({ data, invertSigns, onExportCSV }) {
             Vessel Voyage Financial Ledger
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Granular records extracted from ERP/SAP accounting reports with verified voyage cost metrics.
+            Granular records extracted from ERP/SAP accounting reports. Click any vessel to inspect individual operational metrics.
           </p>
         </div>
 
@@ -185,13 +186,17 @@ export default function DataTableView({ data, invertSigns, onExportCSV }) {
                   </td>
                   <td className="py-2.5 px-3 text-slate-300 font-medium">{row.sector}</td>
                   <td className="py-2.5 px-3 font-semibold text-white">
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => onSelectVessel && onSelectVessel(row.vessel)}
+                      className="flex items-center gap-1.5 hover:text-sky-300 text-left transition-colors"
+                    >
                       <Ship className="w-3 h-3 text-sky-400" />
                       <span>{row.vessel}</span>
                       {row.vessel_code && (
                         <span className="text-[10px] text-slate-500 font-mono">({row.vessel_code})</span>
                       )}
-                    </div>
+                      <ExternalLink className="w-3 h-3 opacity-40 ml-0.5" />
+                    </button>
                   </td>
                   
                   {KPI_KEYS.map((k) => {

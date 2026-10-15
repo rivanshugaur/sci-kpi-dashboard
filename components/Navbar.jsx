@@ -10,7 +10,9 @@ import {
   ShieldCheck, 
   RefreshCw,
   SlidersHorizontal,
-  TableProperties
+  TableProperties,
+  Sliders,
+  Printer
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -18,6 +20,7 @@ export default function Navbar({
   onOpenLogin, 
   onLogout, 
   onOpenUpload, 
+  onOpenScenario,
   currentTab, 
   setCurrentTab,
   invertSigns,
@@ -81,20 +84,40 @@ export default function Navbar({
             </button>
           </div>
 
-          {/* Actions & User Section */}
-          <div className="flex items-center gap-2.5">
+          {/* Actions & Tools */}
+          <div className="flex items-center gap-2">
             
+            {/* Scenario Planner Tool */}
+            <button
+              onClick={onOpenScenario}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-sky-300 bg-sky-950/80 hover:bg-sky-900/90 border border-sky-800/60 transition-colors"
+              title="Commercial Fuel & Charter Rate Sensitivity Planner"
+            >
+              <Sliders className="w-3.5 h-3.5 text-sky-400" />
+              <span>Sensitivity</span>
+            </button>
+
+            {/* Print View */}
+            <button
+              onClick={() => window.print()}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-navy-900 hover:bg-navy-800 border border-navy-800 transition-colors"
+              title="Print Executive Dashboard"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-400" />
+              <span>Print</span>
+            </button>
+
             {/* Sign Convention Toggle */}
             <button
               onClick={() => setInvertSigns(!invertSigns)}
               title="Toggle SAP Debit/Credit accounting sign convention"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-navy-900 hover:bg-navy-800 border border-navy-800 transition-colors"
+              className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-navy-900 hover:bg-navy-800 border border-navy-800 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5 text-sky-400" />
-              <span>{invertSigns ? 'Display: Positive Values' : 'Display: Raw SAP'}</span>
+              <span>{invertSigns ? 'Positive View' : 'Raw SAP'}</span>
             </button>
 
-            {/* Export Button */}
+            {/* Export CSV Button */}
             <button
               onClick={onExportCSV}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-navy-900/90 hover:bg-navy-800 border border-navy-800 transition-all hover:border-slate-700"
@@ -118,7 +141,7 @@ export default function Navbar({
               <div className="flex items-center gap-2 pl-2 border-l border-navy-800">
                 <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-navy-900/80 border border-emerald-500/30 text-emerald-400 text-xs">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="font-medium capitalize">{auth.username}</span>
+                  <span className="font-medium capitalize hidden sm:inline">{auth.username}</span>
                 </div>
                 <button
                   onClick={onLogout}

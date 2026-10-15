@@ -12,9 +12,9 @@ import {
   Legend,
 } from 'recharts';
 import { KPI_META, KPI_KEYS } from '../lib/dataCleaner';
-import { Ship, BarChart2, Table as TableIcon, Award } from 'lucide-react';
+import { Ship, BarChart2, Table as TableIcon, ExternalLink } from 'lucide-react';
 
-export default function VesselView({ data, invertSigns }) {
+export default function VesselView({ data, invertSigns, onSelectVessel }) {
   const [viewType, setViewType] = useState('chart');
   const [sortBy, setSortBy] = useState('Total_Income'); // 'Total_Income' | 'GOP' | 'PBT'
 
@@ -79,6 +79,7 @@ export default function VesselView({ data, invertSigns }) {
               </div>
             ))}
           </div>
+          <p className="text-[10px] text-sky-400 mt-2 italic">Click bar to view full vessel dossier</p>
         </div>
       );
     }
@@ -96,7 +97,7 @@ export default function VesselView({ data, invertSigns }) {
             Individual Vessel Fleet Benchmarking
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Performance assessment per ship: revenue contribution, direct voyage costs, and bottom-line margin.
+            Performance assessment per ship. Click any vessel to open its dedicated operational dossier.
           </p>
         </div>
 
@@ -154,6 +155,7 @@ export default function VesselView({ data, invertSigns }) {
                     </th>
                   ))}
                   <th className="py-3 px-4 font-semibold text-right text-slate-300">GOP Margin</th>
+                  <th className="py-3 px-4 text-center text-slate-400">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy-800/60">
@@ -163,9 +165,17 @@ export default function VesselView({ data, invertSigns }) {
                   return (
                     <tr key={row.name} className="hover:bg-navy-800/30 transition-colors">
                       <td className="py-3 px-4 font-semibold text-sky-400">#{idx + 1}</td>
-                      <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
-                        <Ship className="w-3.5 h-3.5 text-slate-400" />
-                        {row.name}
+                      <td className="py-3 px-4 font-bold text-white">
+                        <button
+                          onClick={() => onSelectVessel(row.name)}
+                          className="flex items-center gap-2 hover:text-sky-300 text-left transition-colors"
+                        >
+                          <Ship className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{row.name}</span>
+                          {row.code && (
+                            <span className="text-[10px] text-slate-500 font-mono">({row.code})</span>
+                          )}
+                        </button>
                       </td>
                       <td className="py-3 px-4 text-slate-300">{row.sector}</td>
                       {KPI_KEYS.map((k) => (
@@ -174,6 +184,15 @@ export default function VesselView({ data, invertSigns }) {
                         </td>
                       ))}
                       <td className="py-3 px-4 text-right font-semibold text-purple-400">{gopM}%</td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => onSelectVessel(row.name)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-navy-800 transition-colors"
+                          title="View Vessel Dossier"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -182,7 +201,13 @@ export default function VesselView({ data, invertSigns }) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={420}>
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+              onClick={(e) => {
+                if (e && e.activeLabel) onSelectVessel(e.activeLabel);
+              }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
               <XAxis dataKey="name" stroke="#94a3b8" angle={-25} textAnchor="end" height={60} />
               <YAxis stroke="#94a3b8" tickFormatter={(v) => `₹${v}`} />
@@ -195,6 +220,7 @@ export default function VesselView({ data, invertSigns }) {
                   name={KPI_META[k].short}
                   fill={KPI_META[k].color}
                   radius={[4, 4, 0, 0]}
+                  cursor="pointer"
                 />
               ))}
             </BarChart>
